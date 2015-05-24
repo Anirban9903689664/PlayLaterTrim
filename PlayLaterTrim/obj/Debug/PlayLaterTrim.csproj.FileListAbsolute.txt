@@ -1,0 +1,6 @@
+c:\projects\PlayLaterTrim\PlayLaterTrim\bin\Debug\PlayLaterTrim.exe
+c:\projects\PlayLaterTrim\PlayLaterTrim\bin\Debug\PlayLaterTrim.pdb
+c:\projects\PlayLaterTrim\PlayLaterTrim\bin\Debug\MediaToolkit.dll
+c:\projects\PlayLaterTrim\PlayLaterTrim\obj\Debug\PlayLaterTrim.csprojResolveAssemblyReference.cache
+c:\projects\PlayLaterTrim\PlayLaterTrim\obj\Debug\PlayLaterTrim.exe
+c:\projects\PlayLaterTrim\PlayLaterTrim\obj\Debug\PlayLaterTrim.pdb
