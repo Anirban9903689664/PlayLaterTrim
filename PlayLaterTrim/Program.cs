@@ -1,12 +1,8 @@
 ﻿using MediaToolkit;
 using MediaToolkit.Model;
-using MediaToolkit.Options;
-using MediaToolkit.Util;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
+using System.Diagnostics;
 
 namespace PlayLaterTrim
 {
@@ -14,51 +10,72 @@ namespace PlayLaterTrim
     {
         static void Main(string[] args)
         {
-            string directoryPath = @"C:\PlayLater";
-            string[] fileEntries = Directory.GetFiles(directoryPath);
-            foreach (string filePath in fileEntries)
-                ProcessFile(filePath);
+            try
+            {
+                string directoryPath = @"C:\Users\Public\Videos\PlayLater\PlayLaterTrim";
+                string[] fileEntries = Directory.GetFiles(directoryPath);
+                foreach (string filePath in fileEntries)
+                    ProcessFile(filePath);
+            }
+            catch (Exception ex)
+            {
+                LogError(ex);
+            }
         }
 
         public static void ProcessFile(string filePath)
         {
-            var inputFile = new MediaFile { Filename = filePath };
-            var outputFile = new MediaFile { Filename = @"C:\PlayLater\test" + @"\" + Path.GetFileName(filePath) };
-
-            using (var engine = new Engine())
+            try
             {
-                engine.ConvertProgressEvent += ConvertProgressEvent;
-                engine.ConversionCompleteEvent += engine_ConversionCompleteEvent;
-                engine.GetMetadata(inputFile);
-                if (inputFile.Metadata != null)
+                using (var engine = new Engine())
                 {
-                    var options = new ConversionOptions();
-                    options.CutMedia(TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(inputFile.Metadata.Duration.TotalSeconds) - TimeSpan.FromSeconds(10));
-                    engine.Convert(inputFile, outputFile, options);
+                    var inputFile = new MediaFile { Filename = filePath };
+                    engine.GetMetadata(inputFile);
+                    if (inputFile.Metadata != null)
+                    {
+                        string command = @"C:\ffmpeg\bin\ffmpeg.exe";
+                        string args = String.Format(@"-i ""{0}"" -ss 00:00:05 -t {1} -vcodec copy -acodec copy ""{2}"" -y", filePath, (inputFile.Metadata.Duration - TimeSpan.FromSeconds(10)).ToString(@"hh\:mm\:ss"), @"C:\Users\Public\Videos\" + Path.GetFileName(filePath));
+                        Log(args);
+
+                        Process process = new Process();
+                        process.StartInfo.FileName = command;
+                        process.StartInfo.Arguments = args;
+                        process.StartInfo.UseShellExecute = false;
+                        process.StartInfo.CreateNoWindow = true;
+                        process.Start();
+                        process.WaitForExit(600000);
+                        File.Delete(filePath);
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                LogError(ex);
             }
         }
 
-        private static void ConvertProgressEvent(object sender, ConvertProgressEventArgs e)
+        public static void Log(string line)
         {
-            Console.WriteLine("\n------------\nConverting...\n------------");
-            Console.WriteLine("Bitrate: {0}", e.Bitrate);
-            Console.WriteLine("Fps: {0}", e.Fps);
-            Console.WriteLine("Frame: {0}", e.Frame);
-            Console.WriteLine("ProcessedDuration: {0}", e.ProcessedDuration);
-            Console.WriteLine("SizeKb: {0}", e.SizeKb);
-            Console.WriteLine("TotalDuration: {0}\n", e.TotalDuration);
-        }
+            string filePath = @"Log.txt";
 
-        private static void engine_ConversionCompleteEvent(object sender, ConversionCompleteEventArgs e)
+            using (StreamWriter writer = new StreamWriter(filePath, true))
+            {
+                writer.WriteLine(DateTime.Now.ToString() + Environment.NewLine);
+                writer.WriteLine(line);
+                writer.WriteLine(Environment.NewLine + "-----------------------------------------------------------------------------" + Environment.NewLine);
+            }
+        }
+        
+        public static void LogError(Exception ex)
         {
-            Console.WriteLine("\n------------\nConversion complete!\n------------");
-            Console.WriteLine("Bitrate: {0}", e.Bitrate);
-            Console.WriteLine("Fps: {0}", e.Fps);
-            Console.WriteLine("Frame: {0}", e.Frame);
-            Console.WriteLine("ProcessedDuration: {0}", e.ProcessedDuration);
-            Console.WriteLine("SizeKb: {0}", e.SizeKb);
-            Console.WriteLine("TotalDuration: {0}\n", e.TotalDuration);
+            string filePath = @"Error.txt";
+
+            using (StreamWriter writer = new StreamWriter(filePath, true))
+            {
+                writer.WriteLine("Message :" + ex.Message + "<br/>" + Environment.NewLine + "StackTrace :" + ex.StackTrace +
+                   "" + Environment.NewLine + "Date :" + DateTime.Now.ToString());
+                writer.WriteLine(Environment.NewLine + "-----------------------------------------------------------------------------" + Environment.NewLine);
+            }
         }
     }
 }
